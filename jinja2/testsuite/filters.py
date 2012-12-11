@@ -47,14 +47,14 @@ class FilterTestCase(JinjaTestCase):
     def test_batch(self):
         tmpl = env.from_string("{{ foo|batch(3)|list }}|"
                                "{{ foo|batch(3, 'X')|list }}")
-        out = tmpl.render(foo=range(10))
+        out = tmpl.render(foo=list(range(10)))
         assert out == ("[[0, 1, 2], [3, 4, 5], [6, 7, 8], [9]]|"
                        "[[0, 1, 2], [3, 4, 5], [6, 7, 8], [9, 'X', 'X']]")
 
     def test_slice(self):
         tmpl = env.from_string('{{ foo|slice(3)|list }}|'
                                '{{ foo|slice(3, "X")|list }}')
-        out = tmpl.render(foo=range(10))
+        out = tmpl.render(foo=list(range(10)))
         assert out == ("[[0, 1, 2, 3], [4, 5, 6], [7, 8, 9]]|"
                        "[[0, 1, 2, 3], [4, 5, 6, 'X'], [7, 8, 9, 'X']]")
 
@@ -109,7 +109,7 @@ class FilterTestCase(JinjaTestCase):
 
     def test_first(self):
         tmpl = env.from_string('{{ foo|first }}')
-        out = tmpl.render(foo=range(10))
+        out = tmpl.render(foo=list(range(10)))
         assert out == '0'
 
     def test_float(self):
@@ -151,11 +151,11 @@ class FilterTestCase(JinjaTestCase):
             def __init__(self, username):
                 self.username = username
         tmpl = env.from_string('''{{ users|join(', ', 'username') }}''')
-        assert tmpl.render(users=map(User, ['foo', 'bar'])) == 'foo, bar'
+        assert tmpl.render(users=list(map(User, ['foo', 'bar']))) == 'foo, bar'
 
     def test_last(self):
         tmpl = env.from_string('''{{ foo|last }}''')
-        out = tmpl.render(foo=range(10))
+        out = tmpl.render(foo=list(range(10)))
         assert out == '9'
 
     def test_length(self):
@@ -171,12 +171,12 @@ class FilterTestCase(JinjaTestCase):
     def test_pprint(self):
         from pprint import pformat
         tmpl = env.from_string('''{{ data|pprint }}''')
-        data = range(1000)
+        data = list(range(1000))
         assert tmpl.render(data=data) == pformat(data)
 
     def test_random(self):
         tmpl = env.from_string('''{{ seq|random }}''')
-        seq = range(100)
+        seq = list(range(100))
         for _ in range(10):
             assert int(tmpl.render(seq=seq)) in seq
 
@@ -188,7 +188,7 @@ class FilterTestCase(JinjaTestCase):
     def test_string(self):
         x = [1, 2, 3, 4, 5]
         tmpl = env.from_string('''{{ obj|string }}''')
-        assert tmpl.render(obj=x) == unicode(x)
+        assert tmpl.render(obj=x) == str(x)
 
     def test_title(self):
         tmpl = env.from_string('''{{ "foo bar"|title }}''')
@@ -296,10 +296,10 @@ class FilterTestCase(JinjaTestCase):
         class Magic(object):
             def __init__(self, value):
                 self.value = value
-            def __unicode__(self):
-                return unicode(self.value)
+            def __str__(self):
+                return str(self.value)
         tmpl = env.from_string('''{{ items|sort(attribute='value')|join }}''')
-        assert tmpl.render(items=map(Magic, [3, 2, 4, 1])) == '1234'
+        assert tmpl.render(items=list(map(Magic, [3, 2, 4, 1]))) == '1234'
 
     def test_groupby(self):
         tmpl = env.from_string('''
@@ -368,7 +368,7 @@ class FilterTestCase(JinjaTestCase):
 
     def test_forceescape(self):
         tmpl = env.from_string('{{ x|forceescape }}')
-        assert tmpl.render(x=Markup('<div />')) == u'&lt;div /&gt;'
+        assert tmpl.render(x=Markup('<div />')) == '&lt;div /&gt;'
 
     def test_safe(self):
         env = Environment(autoescape=True)
@@ -382,11 +382,11 @@ class FilterTestCase(JinjaTestCase):
         tmpl = env.from_string('{{ "Hello, world!"|urlencode }}')
         assert tmpl.render() == 'Hello%2C%20world%21'
         tmpl = env.from_string('{{ o|urlencode }}')
-        assert tmpl.render(o=u"Hello, world\u203d") == "Hello%2C%20world%E2%80%BD"
+        assert tmpl.render(o="Hello, world\u203d") == "Hello%2C%20world%E2%80%BD"
         assert tmpl.render(o=(("f", 1),)) == "f=1"
         assert tmpl.render(o=(('f', 1), ("z", 2))) == "f=1&amp;z=2"
-        assert tmpl.render(o=((u"\u203d", 1),)) == "%E2%80%BD=1"
-        assert tmpl.render(o={u"\u203d": 1}) == "%E2%80%BD=1"
+        assert tmpl.render(o=(("\u203d", 1),)) == "%E2%80%BD=1"
+        assert tmpl.render(o={"\u203d": 1}) == "%E2%80%BD=1"
         assert tmpl.render(o={0: 1}) == "0=1"
 
 
